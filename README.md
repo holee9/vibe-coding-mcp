@@ -261,6 +261,16 @@ vibe-coding-mcp/
 - **[product.md](.moai/project/product.md)**: 제품 개요, 타겟 사용자, 핵심 기능, 사용 사례
 - **[structure.md](.moai/project/structure.md)**: 아키텍처, 디렉토리 구조, 모듈 조직
 - **[tech.md](.moai/project/tech.md)**: 기술 스택, 개발 환경, 빌드 및 배포
+- **[infrastructure-plan.md](.moai/project/infrastructure-plan.md)**: 인프라 구축 계획 (4-Node 클러스터, AI 엔진, CI/CD)
+
+### 인프라 구축 계획
+
+하드웨어 인프라 구축을 위한 상세 가이드가 포함되어 있습니다:
+
+- **4-Node 클러스터**: Raspberry Pi 5, ASUS GX10, Synology NAS, Jetson Nano
+- **AI 엔진**: GLM-4.7 (SGLang), LangGraph 에이전트
+- **워크플로우**: n8n 자동화, CI/CD 파이프라인
+- **구현 단계**: 9주 상세 구현 계획 (Docker Compose, Ansible 포함)
 
 ---
 

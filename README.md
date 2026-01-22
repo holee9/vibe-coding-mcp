@@ -263,14 +263,20 @@ vibe-coding-mcp/
 - **[tech.md](.moai/project/tech.md)**: 기술 스택, 개발 환경, 빌드 및 배포
 - **[infrastructure-plan.md](.moai/project/infrastructure-plan.md)**: 인프라 구축 계획 (4-Node 클러스터, AI 엔진, CI/CD)
 
-### 인프라 구축 계획
+### 인프라 구축 현황
 
 하드웨어 인프라 구축을 위한 상세 가이드가 포함되어 있습니다:
 
-- **4-Node 클러스터**: Raspberry Pi 5, ASUS GX10, Synology NAS, Jetson Nano
-- **AI 엔진**: GLM-4.7 (SGLang), LangGraph 에이전트
-- **워크플로우**: n8n 자동화, CI/CD 파이프라인
-- **구현 단계**: 9주 상세 구현 계획 (Docker Compose, Ansible 포함)
+**현재 완료된 구성 요소:**
+- ✅ Raspberry Pi 5: n8n, Cloudflare Tunnel (외부 도메인 접속 완료)
+- ✅ Synology NAS: Gitea, Redmine, PostgreSQL
+
+**진행 예정인 구성 요소:**
+- ⏳ Raspberry Pi 5: Portainer, Nginx Proxy Manager
+- ⏳ ASUS GX10: GLM-4.7 (SGLang), LangGraph 에이전트
+- ⏳ Jetson Nano: CI/CD 파이프라인
+
+**상세 계획:** [infrastructure-plan.md](.moai/project/infrastructure-plan.md) 참조
 
 ---
 

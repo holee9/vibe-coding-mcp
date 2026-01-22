@@ -32,16 +32,17 @@ Vibe-Coding-MCP 프로젝트는 4개의 노드로 구성된 하이브리드 클�
 
 ```mermaid
 gantt
-    title Vibe-Coding-MCP 인프라 구현 일정 (9주)
+    title Vibe-Coding-MCP 인프라 구현 일정 (업데이트: 2026-01-22)
     dateFormat  YYYY-MM-DD
-    section Phase 1
-    기본 인프라 구축           :p1, 2026-01-22, 2w
+    section Phase 1 (일부 완료)
+    n8n 완료                     :done, p1a, 2026-01-15, 3d
+    Portainer/NPM 추가           :p1b, 2026-01-22, 1w
     section Phase 2
-    AI 서비스 통합            :p2, after p1, 3w
-    section Phase 3
-    CI/CD 자동화              :p3, after p2, 2w
+    AI 서비스 통합               :p2, after p1b, 3w
+    section Phase 3 (간소화)
+    CI/CD 파이프라인              :p3, after p2, 1w
     section Phase 4
-    통합 및 최적화            :p4, after p3, 2w
+    통합 및 최적화                :p4, after p3, 2w
 ```
 
 ### 1.4 필요 리소스
@@ -64,6 +65,23 @@ gantt
 - DevOps 엔지니어 1명 (전담)
 - AI/ML 엔지니어 1명 (파트타임)
 - 시스템 관리자 1명 (파트타임)
+
+### 1.5 현재 구축 완료 상태
+
+### 완료된 구성 요소
+
+| 노드 | 상태 | 완료된 서비스 | 검증 상태 |
+|------|------|---------------|-----------|
+| **Raspberry Pi 5** | ✅ 완료 | n8n, Cloudflare Tunnel | 외부 도메인 접속 확인 |
+| **Synology NAS** | ✅ 완료 | Gitea, Redmine, PostgreSQL | 내부 네트워크 정상 |
+| **ASUS GX10** | ⏳ 대기 중 | - | 하드웨어 준비 완료 |
+| **Jetson Nano** | ⏳ 대기 중 | - | 하드웨어 준비 완료 |
+
+### 다음 우선순위
+
+1. **Phase 1 완료**: Raspberry Pi 5에 Portainer, Nginx Proxy Manager 추가
+2. **Phase 2 시작**: ASUS GX10 AI 엔진 구축 (GLM-4.7, SGLang)
+3. **Phase 3 간소화**: Gitea/Redmine 완료로 Jetson Nano CI/CD만 구축
 
 ---
 
@@ -215,11 +233,18 @@ flowchart TD
 
 ### 3.1 Phase 1: 기본 인프라 구축 (Week 1-2)
 
+**현재 상태:** n8n은 Raspberry Pi 5에 이미 구축 완료되었으며, Cloudflare Tunnel을 통한 외부 접속이 확인됨.
+
 #### 목표
 - Raspberry Pi 5와 Synology NAS 기본 설정
 - Docker Swarm 클러스터 초기화
 - 네트워크 구성과 보안 기본 사항 구현
 - Portainer와 Nginx Proxy Manager 배포
+
+#### 남은 작업
+- Portainer 배포
+- Nginx Proxy Manager 배포
+- Docker Swarm 클러스터 설정 (미완료 시)
 
 #### 상세 작업
 
@@ -318,7 +343,8 @@ networks:
 ```
 
 #### 검증 기준
-- [ ] Cloudflare Tunnel을 통한 외부 접속 가능
+- [x] Cloudflare Tunnel을 통한 외부 접속 가능
+- [x] n8n 서비스 배포 및 웹훅 작동
 - [ ] Portainer 대시보드 접속 가능
 - [ ] Nginx Proxy Manager 프록시 설정 완료
 - [ ] Docker Swarm 클러스터 상태 정상
@@ -501,6 +527,8 @@ networks:
 ---
 
 ### 3.3 Phase 3: CI/CD 자동화 (Week 6-7)
+
+**참고:** Gitea와 Redmine은 Synology NAS에 이미 구축됨. Jetson Nano CI/CD 서버 구축과 Runner 연결만 진행.
 
 #### 목표
 - Jetson Nano CI/CD 서버 구축

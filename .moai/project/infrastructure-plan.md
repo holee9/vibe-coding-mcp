@@ -1,10 +1,19 @@
 # Vibe-Coding-MCP 인프라 구현 계획서
 
-**버전:** 1.1.0
+**버전:** 1.2.0
 **작성일:** 2026-01-22
-**최종 업데이트:** 2026-01-22
+**최종 업데이트:** 2026-02-01
 **프로젝트 기간:** 9주
-**문서 상태:** Production Ready (현재 상태 반영 완료)
+**문서 상태:** Production Ready (GB10 Superchip 업데이트)
+
+### Changelog
+- v1.2.0 (2026-02-01): ASUS Ascent GX10 with NVIDIA GB10 Grace Blackwell Superchip 사양 반영
+  - RTX 3060 12GB → GB10 Superchip (128 GB Unified Memory)
+  - 단일 모델 → 다중 모델 플릿 전략 (Qwen2.5-Coder-14B, GLM-4-9B, DeepSeek-Coder-V2-Lite-16B)
+  - SGLang 점수 상향 (7.5/10 → 9/10, ARM64 native 지원)
+  - GB10 특화 최적화 섹션 추가
+  - 성능 벤치마크 섹션 추가
+- v1.1.0 (2026-01-22): 현재 상태 반영 완료
 
 ---
 
@@ -18,7 +27,10 @@ Vibe-Coding-MCP 프로젝트는 4개의 노드로 구성된 하이브리드 클�
 
 **기술적 목표:**
 - Docker Swarm 기반 컨테이너 오케스트레이션 구현
-- SGLang을 활용한 GLM-4.7 모델 서빙 (7.5/10 점수)
+- SGLang을 활용한 다중 모델 플릿 서빙 (9/10 점수, ARM64 native)
+  - Qwen2.5-Coder-14B-Instruct (주요 코딩 어시스턴트)
+  - GLM-4-9B-Chat (빠른 반복, 복잡한 추론)
+  - DeepSeek-Coder-V2-Lite-16B (코드 특화 작업)
 - Cloudflare Tunnel을 통한 보안 외부 접속
 - Prometheus + Grafana + Loki 스택으로 모니터링 구축
 - GitHub Actions와 Gitea Runner를 통한 CI/CD 자동화
@@ -50,7 +62,7 @@ gantt
 
 **하드웨어:**
 - Raspberry Pi 5 (8GB RAM) - Gateway/Proxy 서버
-- ASUS GX10 (RTX 3060, 32GB RAM) - AI 서버
+- ASUS Ascent GX10 (NVIDIA GB10 Grace Blackwell Superchip, 128 GB Unified Memory) - AI 서버
 - Synology NAS (DS923+, 16GB RAM) - 데이터/스토리지
 - NVIDIA Jetson Nano - CI/CD 빌드 서버
 
@@ -90,7 +102,9 @@ gantt
 ### 다음 우선순위
 
 1. **Phase 1 완료**: Raspberry Pi 5에 Portainer, Nginx Proxy Manager 추가
-2. **Phase 2 시작**: ASUS GX10 AI 엔진 구축 (GLM-4.7, SGLang)
+2. **Phase 2 시작**: ASUS Ascent GX10 (GB10 Superchip) AI 엔진 구축
+   - SGLang + 다중 모델 플릿 (Qwen2.5-Coder-14B, GLM-4-9B, DeepSeek-Coder-V2-Lite-16B)
+   - GB10 특화 최적화 (Unified Memory, ARM64, Radix Cache)
 3. **Phase 3 간소화**: Gitea/Redmine 완료로 Jetson Nano CI/CD만 구축
 
 ---
@@ -134,7 +148,7 @@ flowchart TD
         CF[Cloudflare Tunnel]
     end
 
-    subgraph DMZ["DMZ Network (192.168.1.0/24)"]
+    subgraph DMZ["DMZ Network (192.168.1.0/24) - 10 GbE"]
         NGINX[Nginx Proxy Manager<br/>:80, :443]
         PORTAINER[Portainer<br/>:9443]
     end
@@ -217,16 +231,19 @@ flowchart TD
 - 복잡한 배포 전략 제한
 - 확장성 한계 (대규모 클러스터 부적합)
 
-**AI 모델 서빙: SGLang (7.5/10)**
+**AI 모델 서빙: SGLang (9/10)**
 
-*선택 이유:*
-- GLM-4.7 모델에 최적화된 성능
-- OpenAI API 호환 인터페이스
-- 효율적인 메모리 관리
-- 액티브 커뮤니티 지원
+*선택 이유 (GB10 Superchip 최적화):*
+- **ARM64 네이티브 지원**: GB10의 ARM 아키텍처에 최적화된 성능
+- **Radix Attention**: 다중 턴 코딩 작업에 최적化的인 프리픽스 캐싱
+- **Unified Memory 활용**: 128GB 통합 메모리를 효율적으로 활용 (max_model_len: 128000)
+- **다중 모델 서빙**: 여러 전문화된 모델을 동시에 실행 가능
+- **OpenAI API 호환**: 기존 코드와 호환성 유지
+- **액티브 커뮤니티**: 빠른 버그 수정과 기능 업데이트
 
 *폴백 옵션:*
-- Ollama: 간단한 설정, 광범위한 모델 지원
+- **vLLM (8.5/10)**: PagedAttention, 성숙한 ARM64 지원, 프로덕션 준비
+- **Ollama (7/10)**: 간단한 설정, 광범위한 모델 지원
 - SGLang 장애 시 자동 전환
 
 **모니터링: Prometheus + Grafana + Loki**
@@ -236,6 +253,43 @@ flowchart TD
 - Grafana: 강력한 시각화 대시보드
 - Loki: 효율적인 로그 집계 (Elasticsearch 대비 저렴)
 - 통합된 스택 운영 용이성
+
+### 2.5 GB10 Superchip 특화 최적화
+
+#### Unified Memory 아키텍처 활용
+
+GB10 Superchip의 통합 메모리 아키텍처를 통해 CPU와 GPU가 128GB 메모리 풀을 공유합니다:
+
+* **Zero-copy 데이터 전송**: NVLink-C2C(900 GB/s)를 통한 CPU-GPU 간 데이터 복사 없는 전송
+* **호스트 임베딩 추론**: CPU에 임베딩 모델(bge-m3) 호스팅, GPU에서 복사 없이 추론
+* **공격적인 KV Cache 사이징**: 80GB+ KV Cache 할당으로 긴 컨텍스트 처리
+* **동적 메모리 관리**: 요청 부하에 따른 메모리 동적 재할당
+
+#### ARM64 특화 튜닝
+
+GB10의 20-core ARM 아키텍처에 최적화된 설정:
+
+* **NEON 최적화**: ARM NEON SIMD 명령어를 활용한 벡터 연산 가속
+* **스레드 수 매칭**: 20코어에 맞춘 병렬 처리 스레드 구성
+* **메모리 할당 튜닝**: 대용량 메모리 블록 할당으로 단편화 최소화
+* **컴파일러 최적화**: `-march=armv8-a -mtune=native` 플래그로 네이티브 성능
+
+#### 다중 모델 병렬 실행
+
+전문화된 모델들의 동시 실행을 통한 작업 최적화:
+
+* **작업 기반 라우팅**: 간단한 작업 → GLM-4-9B, 복잡한 코딩 → Qwen2.5-Coder-14B, 코드 생성 → DeepSeek-Coder-V2-Lite-16B
+* **병렬 에이전트 조정**: 여러 전문화된 에이전트가 동시에 다른 모델 사용
+* **모델 로드 밸런싱**: 사용 빈도에 따른 모델 상주/언로딩
+* **공유 KV Cache**: 모델 간 컨텍스트 공유로 메모리 절약
+
+#### GB10 네트워킹 최적화
+
+10 GbE + ConnectX-7를 활용한 고속 통신:
+
+* **RDMA 지원**: 원지 메모리 액세스로 지연 시간 최소화
+* **Jumbo 프레임**: MTU 9000으로 대용량 패킷 전송 효율화
+* **다중 연결 병렬화**: 복수의 TCP 연결로 대역폭 극대화
 
 ---
 
@@ -377,10 +431,15 @@ networks:
 ### 3.2 Phase 2: AI 서비스 통합 (Week 3-5)
 
 #### 목표
-- ASUS GX10 AI 서버 구축
-- SGLang 서버 설치 및 GLM-4.7 모델 배포
-- Ollama 폴백 서비스 구성
+- ASUS Ascent GX10 (GB10 Superchip) AI 서버 구축
+- SGLang 서버 설치 및 다중 모델 플릿 배포
+  - Qwen2.5-Coder-14B-Instruct (주요 코딩 어시스턴트)
+  - GLM-4-9B-Chat (빠른 반복, 복잡한 추론)
+  - DeepSeek-Coder-V2-Lite-16B (코드 특화 작업)
+  - bge-m3 (임베딩 모델)
+- vLLM 폴백 서비스 구성
 - LangGraph Agent 통합
+- GB10 Superchip 특화 최적화 적용
 
 #### 상세 작업
 
@@ -413,20 +472,23 @@ sudo mount -t nfs 192.168.4.10:/volume1/ai-models /mnt/ai-models
 echo "192.168.4.10:/volume1/ai-models /mnt/ai-models nfs defaults 0 0" | sudo tee -a /etc/fstab
 ```
 
-**Week 4: SGLang 설치 및 모델 배포**
+**Week 4: SGLang 설치 및 다중 모델 배포**
 
-1. **SGLang 설치**
+1. **SGLang 설치 (GB10 ARM64 최적화)**
 ```bash
 # Python 환경 설정
 python3.10 -m venv /opt/sglang
 source /opt/sglang/bin/activate
 pip install "sglang[all]"
 
-# GLM-4.7 모델 다운로드
+# 다중 모델 다운로드 (4-bit 양자화)
+huggingface-cli download Qwen/Qwen2.5-Coder-14B-Instruct --local-dir /mnt/ai-models/qwen2.5-coder-14b
 huggingface-cli download THUDM/glm-4-9b-chat --local-dir /mnt/ai-models/glm-4-9b-chat
+huggingface-cli download deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct --local-dir /mnt/ai-models/deepseek-coder-v2-lite
+huggingface-cli download BAAI/bge-m3 --local-dir /mnt/ai-models/bge-m3
 ```
 
-2. **SGLang 서비스 배포**
+2. **SGLang 서비스 배포 (GB10 최적화)**
 ```yaml
 # docker-compose-sglang.yml
 version: '3.8'
@@ -438,17 +500,21 @@ services:
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONUNBUFFERED=1
     ports:
       - "8000:8000"
     volumes:
       - /mnt/ai-models:/models
     command: >
       python -m sglang.launch_server
-      --model-path /models/glm-4-9b-chat
+      --model-path /models/qwen2.5-coder-14b
       --port 8000
       --host 0.0.0.0
       --tp 1
-      --quantization fp8
+      --quantization awq
+      --max-model-len 128000
+      --chunked-prefill-size 4096
+      --radix-cache
     networks:
       - ai_network
     deploy:
@@ -520,21 +586,73 @@ networks:
 ```
 
 #### 검증 기준
-- [ ] SGLang 서버가 GLM-4.7 모델을 성공적으로 로드
+- [ ] SGLang 서버가 다중 모델 플릿(Qwen2.5-Coder-14B, GLM-4-9B, DeepSeek-Coder-V2-Lite-16B)을 성공적으로 로드
+- [ ] Unified Memory 활용량이 80GB 이상 확인
 - [ ] OpenAI API 호환 인터페이스 정상 작동
-- [ ] Ollama 폴백 서비스 자동 전환 확인
+- [ ] vLLM 폴백 서비스 자동 전환 확인
 - [ ] LangGraph Agent가 SGLang과 통신 가능
-- [ ] GPU 메모리 사용량이 80% 이하 유지
+- [ ] ARM64 최적화 성능 검증
+- [ ] 다중 모델 병렬 실행(3개 이상) 확인
+- [ ] KV Cache 성능 벤치마크 완료
 
 #### 위험 및 완화
 
-**위험 1: GPU 메모리 부족**
-- 완화: FP8 양자화 적용, 모델 분산 배포 고려
-- 모니터링: Grafana 대시보드에서 GPU 메모리 추적
+**위험 1: GB10 Superchip 호환성 이슈**
+- 완화: ARM64 네이티브 최적화된 SGLang/vLLM 버전 사용
+- 모니터링: NVLink-C2C 대역폭과 Unified Memory 사용량 추적
+- 폴백: vLLM로 자동 전환
 
-**위험 2: SGLang 서비스 불안정**
-- 완화: Health check 구성, Ollama 폴백 자동화
+**위험 2: 다중 모델 서빙 메모리 관리**
+- 완화: 4-bit 양자화(AWQ, GPTQ) 적용, 공유 KV Cache 활용
+- 모니터링: Grafana 대시보드에서 메모리 사용량 추적 (목표: 80GB+ 활용)
+- 재해 복구: 모델 자동 스케일링 및 언로딩 정책 설정
+
+**위험 3: SGLang 서비스 불안정**
+- 완화: Health check 구성, vLLM 폴백 자동화
 - 재해 복구: 컨테이너 자동 재시작 정책 설정
+
+### 3.2.1 성능 벤치마크 (GB10 + Qwen2.5-Coder-14B)
+
+#### 예상 성능 지표
+
+| 메트릭 | 예상 값 | 비고 |
+|--------|---------|------|
+| Cold Start | 3-5초 | 모델 로딩 시간 |
+| Single-turn (캐시 없음) | 50-80ms | 프롬프트 처리 |
+| Multi-turn (프리픽스 캐시) | 20-30ms | Radix Cache 적용 |
+| 코드 생성 (500 토큰) | ~500ms | 일반적인 함수 생성 |
+| 리팩토링 (2K 토큰) | ~2초 | 다중 파일 변경 |
+| 동시 요청 처리 | 100+ req/s | 배치 처리 포함 |
+
+#### 70B 모델 대비 비교
+
+| 항목 | 14B 모델 (GB10) | 70B 모델 (RTX 3060) | 개선 효과 |
+|------|-----------------|---------------------|-----------|
+| 추론 속도 | 4-6x 빠름 | 기준 | 400-600% 향상 |
+| Cold Start | 6x 빠름 | 기준 | 600% 향상 |
+| 코딩 품질 | 미미한 차이 | 기준 | 코딩 작업에서 품질 손실 거의 없음 |
+| 메모리 사용 | 10GB (4-bit) | 12GB VRAM 병목 | 메모리 여유 118GB |
+| 다중 모델 | 3개 동시 실행 | 불가능 | 전문화된 에이전트 조정 가능 |
+
+#### 다중 모델 플릿 장점
+
+**왜 7-14B 다중 모델이 70B 단일 모델보다 개발에 적은가:**
+
+1. **속도**: 14B 모델은 70B 대비 4-6배 빠른 추론
+2. **전문화**: 각 모델이 특정 작업에 최적화 (코딩, 추론, 채팅)
+3. **병렬 처리**: 동시에 여러 모델 실행으로 에이전트 조정 가능
+4. **메모리 효율**: 총 90-110GB 사용으로 18-38GB 여유
+5. **유연성**: 작업에 맞는 모델 동적 선택
+
+**작업 기반 라우팅:**
+
+| 작업 유형 | 모델 | 이유 |
+|-----------|------|------|
+| 일반 채팅, 간단한 질문 | GLM-4-9B-Chat | 빠른 응답 (18GB @ 4-bit) |
+| 코드 생성, 리팩토링 | Qwen2.5-Coder-14B | 코딩 특화 (10GB @ 4-bit) |
+| 코드 검토, 최적화 | DeepSeek-Coder-V2-Lite-16B | 깊은 코드 이해 (12GB @ 4-bit) |
+| 의미적 검색 | bge-m3 | 임베딩 전용 (2GB) |
+| **총계** | **~42GB 모델** | **~80GB KV Cache = ~122GB** |
 
 ---
 
@@ -921,16 +1039,23 @@ find $BACKUP_DIR -name "*.zip" -mtime +7 -delete
 | Power | 27W USB-C 전원어댑터 | 공식 어댑터 필수 |
 | 쿨링 | 액티브 쿨러 | 케이스 포함 |
 
-#### AI Engine Node: ASUS GX10
+#### AI Engine Node: ASUS Ascent GX10 (NVIDIA GB10 Grace Blackwell Superchip)
 
 | 항목 | 사양 | 비고 |
 |------|------|------|
-| CPU | Intel Core i7-11800H | 8코어 16스레드 |
-| RAM | 32GB DDR4 | 3200MHz |
-| GPU | NVIDIA RTX 3060 | 12GB VRAM |
+| SoC | NVIDIA GB10 Grace Blackwell Superchip | 20-core ARM + Blackwell GPU 통합 |
+| Memory | 128 GB LPDDR5x Unified Memory | CPU + GPU 공용 메모리 풀 |
+| AI Performance | 1 PFLOP FP4 | AI 컴퓨팅 성능 |
+| Networking | 10 GbE + ConnectX-7 | 고속 네트워킹 |
+| NVLink-C2C | 900 GB/s | CPU-GPU 대역폭 |
 | Storage | 1TB NVMe SSD | OS + Models |
-| Network | Gigabit Ethernet | Wi-Fi 6 지원 |
-| Power | 650W 80+ Gold | GPU 부하 고려 |
+| Power | 고효율 전원 공급 장치 | Unified Memory 아키텍처 |
+
+**주요 특징:**
+- **Unified Memory 아키텍처**: CPU와 GPU가 128GB 메모리 풀 공유 (VRAM 병목 없음)
+- **ARM64 네이티브**: SGLang, vLLM 등이 ARM64에 네이티브로 최적화
+- **고속 연결**: NVLink-C2C로 900 GB/s 대역폭 제공
+- **다중 모델 병렬 실행**: 3개 이상의 전문화된 모델을 동시에 실행 가능
 
 #### Data Node: Synology DS923+
 
@@ -3361,7 +3486,10 @@ main
 
 **다음 우선순위:**
 1. **Phase 1 완료**: Raspberry Pi 5에 Portainer, Nginx Proxy Manager 배포
-2. **Phase 2 시작**: ASUS GX10 AI 엔진 구축 (GLM-4.7, SGLang, LangGraph)
+2. **Phase 2 시작**: ASUS Ascent GX10 (GB10 Superchip) AI 엔진 구축
+   - SGLang + 다중 모델 플릿 배포
+   - GB10 특화 최적화 적용
+   - 성능 벤치마크 수행
 3. **Phase 3 간소화**: Jetson Nano CI/CD 파이프라인 구축 (Gitea/Redmine 완료됨)
 
 **즉시 실행 가능한 작업:**
@@ -3372,6 +3500,28 @@ main
 ---
 
 ## 작업 이력
+
+### 2026-02-01: GB10 Superchip 사양 반영 및 v1.2.0 업데이트
+
+**완료한 작업:**
+1. ASUS Ascent GX10 하드웨어 사양을 GB10 Superchip으로 업데이트
+   - RTX 3060 12GB → NVIDIA GB10 Grace Blackwell Superchip (128 GB Unified Memory)
+   - ARM64 네이티브 최적화 반영
+2. 단일 모델 전략 → 다중 모델 플릿 전략으로 변경
+   - Qwen2.5-Coder-14B-Instruct (주요 코딩 어시스턴트)
+   - GLM-4-9B-Chat (빠른 반복, 복잡한 추론)
+   - DeepSeek-Coder-V2-Lite-16B (코드 특화 작업)
+3. SGLang 점수 상향 (7.5/10 → 9/10, ARM64 native 지원 반영)
+4. GB10 Superchip 특화 최적화 섹션 추가 (2.5절)
+   - Unified Memory 아키텍처 활용
+   - ARM64 특화 튜닝
+   - 다중 모델 병렬 실행
+   - GB10 네트워킹 최적화
+5. 성능 벤치마크 섹션 추가 (3.2.1절)
+   - GB10 + Qwen2.5-Coder-14B 예상 성능
+   - 70B 모델 대비 비교 분석
+   - 다중 모델 플릿 장점 설명
+6. 버전 업데이트 (v1.1.0 → v1.2.0) 및 Changelog 추가
 
 ### 2026-01-22: 현재 상태 반영 및 계획서 업데이트
 

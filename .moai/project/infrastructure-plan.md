@@ -73,10 +73,19 @@ gantt
 
 | 노드 | 상태 | 완료된 서비스 | 검증 상태 |
 |------|------|---------------|-----------|
-| **Raspberry Pi 5** | ✅ 완료 | n8n, Cloudflare Tunnel | 외부 도메인 접속 확인 |
+| **Raspberry Pi 5** | ✅ 완료 | n8n, Cloudflare Tunnel, Issue Form, Email Notification | 외부 도메인 접속 확인, 폼 제출 및 이메일 발송 완료 |
 | **Synology NAS** | ✅ 완료 | Gitea, Redmine, PostgreSQL | 내부 네트워크 정상 |
 | **ASUS GX10** | ⏳ 대기 중 | - | 하드웨어 준비 완료 |
 | **Jetson Nano** | ⏳ 대기 중 | - | 하드웨어 준비 완료 |
+
+### 상세 완료 내용
+
+**Raspberry Pi 5 - n8n 및 이슈 관리 시스템**
+- n8n 워크플로우 자동화 플랫폼 설치 완료
+- 외부 이슈 등록 폼 (Forms) 구축 완료
+- n8n 웹훅 연동: Form 제출 → n8n 트리거 → 이메일 발송 자동화
+- Cloudflare DNS Record 설정: n8n, forms 도메인 연동
+- Cloudflare Tunnel을 통한 보안 외부 접속 구성
 
 ### 다음 우선순위
 
@@ -346,6 +355,8 @@ networks:
 #### 검증 기준
 - [x] Cloudflare Tunnel을 통한 외부 접속 가능
 - [x] n8n 서비스 배포 및 웹훅 작동
+- [x] Issue Form 구축 및 이메일 알림 발송 완료
+- [x] Cloudflare DNS Record 설정 (n8n, forms)
 - [ ] Portainer 대시보드 접속 가능
 - [ ] Nginx Proxy Manager 프록시 설정 완료
 - [ ] Docker Swarm 클러스터 상태 정상

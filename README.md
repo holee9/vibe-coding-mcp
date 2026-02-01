@@ -268,7 +268,7 @@ vibe-coding-mcp/
 하드웨어 인프라 구축을 위한 상세 가이드가 포함되어 있습니다:
 
 **현재 완료된 구성 요소:**
-- ✅ Raspberry Pi 5: n8n, Cloudflare Tunnel (외부 도메인 접속 완료)
+- ✅ Raspberry Pi 5: n8n, Cloudflare Tunnel, Issue Form, Email Notification (외부 도메인 접속 완료)
 - ✅ Synology NAS: Gitea, Redmine, PostgreSQL
 
 **진행 예정인 구성 요소:**
